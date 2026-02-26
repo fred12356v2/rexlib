@@ -10,6 +10,76 @@ function Library:CreateWindow(title)
     ScreenGui.Name = "CustomUILibrary"
     ScreenGui.Parent = game.CoreGui
 
+    local NotifHolder = Instance.new("Frame")
+    NotifHolder.Name = "Notifications"
+    NotifHolder.Size = UDim2.new(0,300,1,-20)
+    NotifHolder.Position = UDim2.new(1,-310,0,10)
+    NotifHolder.BackgroundTransparency = 1
+    NotifHolder.Parent = ScreenGui
+
+    local NotifLayout = Instance.new("UIListLayout")
+    NotifLayout.Padding = UDim.new(0,6)
+    NotifLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    NotifLayout.VerticalAlignment = Enum.VerticalAlignment.Bottom
+    NotifLayout.Parent = NotifHolder
+
+    local function Notify(title,text,time)
+
+        time = time or 3
+
+        local Notif = Instance.new("Frame")
+        Notif.Size = UDim2.new(1,0,0,60)
+        Notif.BackgroundColor3 = Color3.fromRGB(20,20,20)
+        Notif.BorderSizePixel = 0
+        Notif.Parent = NotifHolder
+        Instance.new("UICorner",Notif).CornerRadius = UDim.new(0,6)
+
+        local TitleLabel = Instance.new("TextLabel")
+        TitleLabel.Size = UDim2.new(1,-10,0,20)
+        TitleLabel.Position = UDim2.new(0,5,0,5)
+        TitleLabel.BackgroundTransparency = 1
+        TitleLabel.Text = title
+        TitleLabel.Font = Enum.Font.GothamBold
+        TitleLabel.TextSize = 14
+        TitleLabel.TextColor3 = Color3.fromRGB(255,255,255)
+        TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TitleLabel.Parent = Notif
+
+        local TextLabel = Instance.new("TextLabel")
+        TextLabel.Size = UDim2.new(1,-10,0,20)
+        TextLabel.Position = UDim2.new(0,5,0,28)
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Text = text
+        TextLabel.Font = Enum.Font.Gotham
+        TextLabel.TextSize = 13
+        TextLabel.TextColor3 = Color3.fromRGB(200,200,200)
+        TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+        TextLabel.Parent = Notif
+
+        Notif.Position = UDim2.new(1,0,0,0)
+
+        TweenService:Create(
+            Notif,
+            TweenInfo.new(0.25),
+            {Position = UDim2.new(0,0,0,0)}
+        ):Play()
+
+        task.delay(time,function()
+
+            TweenService:Create(
+                Notif,
+                TweenInfo.new(0.25),
+                {Position = UDim2.new(1,0,0,0)}
+            ):Play()
+
+            task.wait(0.25)
+
+            Notif:Destroy()
+
+        end)
+
+    end
+
     local Main = Instance.new("Frame")
     Main.Size = UDim2.new(0,500,0,320)
     Main.Position = UDim2.new(0.5,-250,0.5,-160)
@@ -68,6 +138,10 @@ function Library:CreateWindow(title)
         Title.Text = text
     end
 
+    function Window:Notify(title,text,time)
+        Notify(title,text,time)
+    end
+
     function Window:AddTab(name)
 
         local Button = Instance.new("TextButton")
@@ -100,11 +174,19 @@ function Library:CreateWindow(title)
 
             for _,v in pairs(Tabs:GetChildren()) do
                 if v:IsA("TextButton") then
-                    TweenService:Create(v,TweenInfo.new(0.15),{TextColor3 = Color3.fromRGB(180,180,180)}):Play()
+                    TweenService:Create(
+                        v,
+                        TweenInfo.new(0.15),
+                        {TextColor3 = Color3.fromRGB(180,180,180)}
+                    ):Play()
                 end
             end
 
-            TweenService:Create(Button,TweenInfo.new(0.15),{TextColor3 = Color3.fromRGB(255,255,255)}):Play()
+            TweenService:Create(
+                Button,
+                TweenInfo.new(0.15),
+                {TextColor3 = Color3.fromRGB(255,255,255)}
+            ):Play()
 
             Page.Visible = true
 
@@ -151,6 +233,42 @@ function Library:CreateWindow(title)
 
                 callback(state)
 
+            end)
+
+        end
+
+        function Tab:AddInput(text,callback)
+
+            local Frame = Instance.new("Frame")
+            Frame.Size = UDim2.new(1,-20,0,50)
+            Frame.BackgroundTransparency = 1
+            Frame.Parent = Page
+
+            local Label = Instance.new("TextLabel")
+            Label.Size = UDim2.new(1,0,0,18)
+            Label.BackgroundTransparency = 1
+            Label.Text = text
+            Label.Font = Enum.Font.Gotham
+            Label.TextSize = 13
+            Label.TextColor3 = Color3.fromRGB(255,255,255)
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = Frame
+
+            local Box = Instance.new("TextBox")
+            Box.Size = UDim2.new(1,0,0,28)
+            Box.Position = UDim2.new(0,0,0,20)
+            Box.BackgroundColor3 = Color3.fromRGB(25,25,25)
+            Box.BorderSizePixel = 0
+            Box.Text = ""
+            Box.PlaceholderText = "Enter text..."
+            Box.Font = Enum.Font.Gotham
+            Box.TextSize = 13
+            Box.TextColor3 = Color3.fromRGB(255,255,255)
+            Box.Parent = Frame
+            Instance.new("UICorner",Box).CornerRadius = UDim.new(0,4)
+
+            Box.FocusLost:Connect(function()
+                callback(Box.Text)
             end)
 
         end
@@ -205,7 +323,12 @@ function Library:CreateWindow(title)
 
                 if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
 
-                    local percent = math.clamp((input.Position.X - Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X,0,1)
+                    local percent = math.clamp(
+                        (input.Position.X - Bar.AbsolutePosition.X)
+                        / Bar.AbsoluteSize.X,
+                        0,
+                        1
+                    )
 
                     Fill.Size = UDim2.new(percent,0,1,0)
 
